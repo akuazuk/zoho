@@ -37,19 +37,24 @@ if ! gcloud builds repositories describe "$REPO_LINK" \
     --remote-uri="https://github.com/${REPO_OWNER}/${REPO_NAME}.git"
 fi
 
+BUILD_SA="${CLOUD_BUILD_TRIGGER_SA:-projects/${PROJECT_ID}/serviceAccounts/478261085970-compute@developer.gserviceaccount.com}"
+
 echo "=== Cloud Build trigger on push to main ==="
 if gcloud builds triggers describe "$TRIGGER_NAME" --region="$REGION" >/dev/null 2>&1; then
   gcloud builds triggers update github "$TRIGGER_NAME" \
     --region="$REGION" \
     --repository="projects/${PROJECT_ID}/locations/${REGION}/connections/${CONNECTION_NAME}/repositories/${REPO_LINK}" \
     --branch-pattern="$BRANCH" \
-    --build-config=cloudbuild.yaml
+    --build-config=cloudbuild.yaml \
+    --service-account="$BUILD_SA"
 else
-  gcloud builds triggers create github "$TRIGGER_NAME" \
+  gcloud builds triggers create github \
+    --name="$TRIGGER_NAME" \
     --region="$REGION" \
     --repository="projects/${PROJECT_ID}/locations/${REGION}/connections/${CONNECTION_NAME}/repositories/${REPO_LINK}" \
     --branch-pattern="$BRANCH" \
     --build-config=cloudbuild.yaml \
+    --service-account="$BUILD_SA" \
     --description="Rebuild prognosis-sheets on push to main"
 fi
 
