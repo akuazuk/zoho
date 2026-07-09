@@ -101,7 +101,10 @@ for name in ZOHO_ORG_ID ZOHO_WORKSPACE_ID GOOGLE_SHEETS_ID GOOGLE_SHEETS_GID; do
 done
 
 echo "=== Build image (Cloud Build) ==="
-gcloud builds submit --tag "$IMAGE" -f cloud/Dockerfile .
+gcloud builds submit \
+  --config=cloud/build-image.cloudbuild.yaml \
+  --substitutions="_IMAGE=${IMAGE}" \
+  .
 
 echo "=== Cloud Run Job ==="
 gcloud run jobs deploy "$JOB_NAME" \

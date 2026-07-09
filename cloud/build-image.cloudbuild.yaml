@@ -1,0 +1,19 @@
+# One-off image build for deploy_prognosis.sh (local deploy step 2).
+substitutions:
+  _IMAGE: europe-west1-docker.pkg.dev/carbide-datum-383616/zoho/prognosis-sheets:latest
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - cloud/Dockerfile
+      - -t
+      - ${_IMAGE}
+      - .
+
+images:
+  - ${_IMAGE}
+
+options:
+  logging: CLOUD_LOGGING_ONLY

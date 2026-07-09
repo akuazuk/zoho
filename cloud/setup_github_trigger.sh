@@ -20,10 +20,13 @@ gcloud config set project "$PROJECT_ID"
 
 echo "=== GitHub connection (2nd gen) ==="
 if ! gcloud builds connections describe "$CONNECTION_NAME" --region="$REGION" >/dev/null 2>&1; then
-  echo "Create GitHub connection — open the URL below and authorize:"
-  gcloud builds connections create github "$CONNECTION_NAME" \
-    --region="$REGION" \
-    --authorizer-token="$(gcloud auth print-access-token)"
+  echo "Creating GitHub connection — open the URL printed below in a browser:"
+  gcloud builds connections create github "$CONNECTION_NAME" --region="$REGION"
+  echo ""
+  echo "After authorizing, install the Cloud Build GitHub App (link from describe output):"
+  echo "  gcloud builds connections describe $CONNECTION_NAME --region=$REGION"
+  echo "Then re-run this script."
+  exit 0
 fi
 
 if ! gcloud builds repositories describe "$REPO_LINK" \
