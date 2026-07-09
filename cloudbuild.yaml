@@ -1,4 +1,4 @@
-# Build prognosis-sheets image and update Cloud Run Job (triggered from GitHub).
+# Build image and redeploy Cloud Run Job with settings from cloud/prognosis-config.env
 substitutions:
   _REGION: europe-west1
   _JOB_NAME: prognosis-sheets
@@ -23,15 +23,34 @@ steps:
       - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_JOB_NAME}
 
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
-    entrypoint: gcloud
+    entrypoint: bash
     args:
-      - run
-      - jobs
-      - deploy
-      - ${_JOB_NAME}
-      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_JOB_NAME}:$COMMIT_SHA
-      - --region=${_REGION}
-      - --service-account=prognosis-runner@$PROJECT_ID.iam.gserviceaccount.com
+      - -c
+      - |
+        set -euo pipefail
+        set -a
+        # shellcheck disable=SC1091
+        source cloud/prognosis-config.env
+        set +a
+        gcloud run jobs deploy ${_JOB_NAME} \
+          --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_JOB_NAME}:$COMMIT_SHA \
+          --region=${_REGION} \
+          --service-account=prognosis-runner@$PROJECT_ID.iam.gserviceaccount.com \
+          --max-retries=1 \
+          --task-timeout=300s \
+          --set-secrets=/secrets/sheets-sa.json=prognosis-sheets-sa-key:latest \
+          --set-secrets=ZOHO_CLIENT_ID=prognosis-zoho_client_id:latest \
+          --set-secrets=ZOHO_CLIENT_SECRET=prognosis-zoho_client_secret:latest \
+          --set-secrets=ZOHO_REFRESH_TOKEN=prognosis-zoho_refresh_token:latest \
+          --set-env-vars="ZOHO_ORG_ID=$${ZOHO_ORG_ID}" \
+          --set-env-vars="ZOHO_WORKSPACE_ID=$${ZOHO_WORKSPACE_ID}" \
+          --set-env-vars="GOOGLE_SHEETS_ID=$${GOOGLE_SHEETS_ID}" \
+          --set-env-vars="GOOGLE_SHEETS_GID=$${GOOGLE_SHEETS_GID}" \
+          --set-env-vars="GOOGLE_SHEETS_CELL_CURRENT=$${GOOGLE_SHEETS_CELL_CURRENT}" \
+          --set-env-vars="GOOGLE_SHEETS_CELL_NEXT=$${GOOGLE_SHEETS_CELL_NEXT}" \
+          --set-env-vars="GOOGLE_SHEETS_CREDENTIALS=$${GOOGLE_SHEETS_CREDENTIALS}" \
+          --set-env-vars="PROGNOSIS_SCHEDULE=$${PROGNOSIS_SCHEDULE}" \
+          --set-env-vars="ZOHO_PROGNOSIS_TABLE=$${ZOHO_PROGNOSIS_TABLE}"
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_JOB_NAME}:$COMMIT_SHA

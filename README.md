@@ -50,6 +50,31 @@ launchctl list | grep prognosis
 tail -f logs/prognosis_sheets_*.log
 ```
 
+## Прогноз: настройки и запуск через Git
+
+### Поменять ячейки (без Mac и без gcloud)
+
+Отредактируйте в GitHub файл **`cloud/prognosis-config.env`**:
+
+```env
+GOOGLE_SHEETS_CELL_CURRENT=A150
+GOOGLE_SHEETS_CELL_NEXT=A151
+```
+
+Сохраните → **commit в `main`** → Cloud Build автоматически обновит job (триггер `prognosis-sheets-push`).
+
+Секреты (Zoho, ключ Sheets) в git не кладутся — они в GCP Secret Manager.
+
+### Запустить вручную через GitHub (опционально)
+
+В репозитории: **Actions** → **Run prognosis sheets** → **Run workflow**.
+
+Нужно один раз добавить secrets в GitHub (Settings → Secrets):
+- `GCP_PROJECT_ID` = `carbide-datum-383616`
+- `GCP_SA_KEY` = JSON ключа service account с правом запускать Cloud Run Jobs
+
+Без этих secrets — ручной запуск через [Cloud Run → Execute](https://console.cloud.google.com/run/jobs?project=carbide-datum-383616).
+
 ## Прогноз: Google Cloud (рекомендуется)
 
 Бесплатного лимита Cloud Run + Cloud Scheduler хватает на ~10 запусков/день по будням.

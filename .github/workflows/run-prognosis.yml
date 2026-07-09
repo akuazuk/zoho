@@ -1,0 +1,23 @@
+# Manual run of prognosis-sheets job in GCP (no Mac needed).
+# Requires GitHub secrets: GCP_PROJECT_ID, GCP_SA_KEY (service account JSON with run.developer).
+name: Run prognosis sheets
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Execute Cloud Run Job
+        run: |
+          gcloud run jobs execute prognosis-sheets \
+            --region=europe-west1 \
+            --project="${{ secrets.GCP_PROJECT_ID }}" \
+            --wait
