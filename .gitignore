@@ -1,0 +1,15 @@
+.env
+.DS_Store
+self_client.json
+*-*.json
+carbide-datum-*.json
+sonorous-saga-*.json
+_sql.pkl
+data/
+logs/
+sql_csv_columns_compare.xlsx
+sql_csv_columns_compare_day1.xlsx
+__pycache__/
+*.pyc
+.venv/
+venv/

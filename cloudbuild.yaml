@@ -1,0 +1,41 @@
+# Build prognosis-sheets image and update Cloud Run Job (triggered from GitHub).
+substitutions:
+  _REGION: europe-west1
+  _JOB_NAME: prognosis-sheets
+  _AR_REPO: zoho
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - cloud/Dockerfile
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_JOB_NAME}:$COMMIT_SHA
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_JOB_NAME}:latest
+      - .
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - --all-tags
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_JOB_NAME}
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - jobs
+      - deploy
+      - ${_JOB_NAME}
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_JOB_NAME}:$COMMIT_SHA
+      - --region=${_REGION}
+      - --service-account=prognosis-runner@$PROJECT_ID.iam.gserviceaccount.com
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_JOB_NAME}:$COMMIT_SHA
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_JOB_NAME}:latest
+
+options:
+  logging: CLOUD_LOGGING_ONLY

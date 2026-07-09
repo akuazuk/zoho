@@ -1,0 +1,12 @@
+pandas>=2.0.0
+sqlalchemy>=2.0.0
+pymysql>=1.1.0
+openpyxl>=3.1.0
+python-dotenv>=1.0.0
+certifi>=2024.0.0
+google-cloud-bigquery>=3.0.0
+google-cloud-storage>=2.0.0
+db-dtypes>=1.0.0
+pyarrow>=14.0.0
+gspread>=6.0.0
+google-auth>=2.0.0

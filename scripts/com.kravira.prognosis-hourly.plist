@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.kravira.prognosis-hourly</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/pavel/CURSOR/sql_epam/scripts/run_prognosis_sheets.sh</string>
+    </array>
+    <key>StartInterval</key>
+    <integer>3600</integer>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/pavel/CURSOR/sql_epam/logs/prognosis.launchd.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/pavel/CURSOR/sql_epam/logs/prognosis.launchd.err.log</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin</string>
+        <key>PROGNOSIS_SCHEDULE</key>
+        <string>weekdays_8_18</string>
+    </dict>
+</dict>
+</plist>
