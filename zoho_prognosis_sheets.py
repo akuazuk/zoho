@@ -119,7 +119,13 @@ def sheets_config() -> dict[str, str]:
     }
 
 
-def load_sheet_formula(path: str) -> str | None:
+def render_sheet_formula(formula: str, sums: PrognosisSums) -> str:
+    """Substitute {{CURRENT_WEEK}} with the value already computed from Zoho."""
+    value = f"{round(sums.current_week, 2):.2f}"
+    return formula.replace("{{CURRENT_WEEK}}", value)
+
+
+def load_sheet_formula(path: str, sums: PrognosisSums | None = None) -> str | None:
     if not path:
         return None
     formula_path = Path(path)
@@ -132,6 +138,8 @@ def load_sheet_formula(path: str) -> str | None:
         return None
     if not formula.startswith("="):
         formula = "=" + formula
+    if sums is not None:
+        formula = render_sheet_formula(formula, sums)
     return formula
 
 
@@ -155,8 +163,8 @@ def write_to_google_sheets(sums: PrognosisSums, *, dry_run: bool = False) -> Non
         print(f"  {cfg['cell_current']}: {sums.current_week:.2f}")
         print(f"  {cfg['cell_next']}: {sums.next_week:.2f}")
         if cfg["cell_combined"]:
-            formula = load_sheet_formula(cfg["formula_combined_file"])
-            print(f"  {cfg['cell_combined']}: formula ({len(formula or '')} chars)")
+            formula = load_sheet_formula(cfg["formula_combined_file"], sums)
+            print(f"  {cfg['cell_combined']}: {formula[:80]}..." if formula and len(formula) > 80 else f"  {cfg['cell_combined']}: {formula}")
         return
 
     import gspread
@@ -195,7 +203,7 @@ def write_to_google_sheets(sums: PrognosisSums, *, dry_run: bool = False) -> Non
     ws.update_acell(cfg["cell_current"], round(sums.current_week, 2))
     ws.update_acell(cfg["cell_next"], round(sums.next_week, 2))
     if cfg["cell_combined"]:
-        formula = load_sheet_formula(cfg["formula_combined_file"])
+        formula = load_sheet_formula(cfg["formula_combined_file"], sums)
         if formula:
             ws.update(
                 cfg["cell_combined"],
