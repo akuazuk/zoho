@@ -132,33 +132,12 @@ gcloud run jobs deploy "$JOB_NAME" \
   --set-env-vars="GOOGLE_SHEETS_CREDENTIALS=/secrets/sheets-sa.json" \
   --set-env-vars="PROGNOSIS_SCHEDULE=always"
 
-RUN_URI="https://${REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${PROJECT_ID}/jobs/${JOB_NAME}:run"
-
-echo "=== Cloud Scheduler (weekdays 08:00-17:00 Europe/Moscow) ==="
-if gcloud scheduler jobs describe "$SCHEDULER_NAME" --location="$REGION" >/dev/null 2>&1; then
-  gcloud scheduler jobs update http "$SCHEDULER_NAME" \
-    --location="$REGION" \
-    --schedule="0 8-17 * * 1-5" \
-    --time-zone="Europe/Moscow" \
-    --uri="$RUN_URI" \
-    --http-method=POST \
-    --oauth-service-account-email="$SA_EMAIL" \
-    --oauth-token-scope="https://www.googleapis.com/auth/cloud-platform"
-else
-  gcloud scheduler jobs create http "$SCHEDULER_NAME" \
-    --location="$REGION" \
-    --schedule="0 8-17 * * 1-5" \
-    --time-zone="Europe/Moscow" \
-    --uri="$RUN_URI" \
-    --http-method=POST \
-    --oauth-service-account-email="$SA_EMAIL" \
-    --oauth-token-scope="https://www.googleapis.com/auth/cloud-platform"
-fi
+bash cloud/update_prognosis_scheduler.sh
 
 echo ""
 echo "Deployed."
 echo "  Job:       $JOB_NAME ($REGION)"
-echo "  Schedule:  weekdays hourly 08:00-17:00 MSK"
+echo "  Schedule:  ${PROGNOSIS_CRON_SCHEDULE} (${PROGNOSIS_TIMEZONE})"
 echo "  Test run:  gcloud run jobs execute $JOB_NAME --region=$REGION --wait"
 echo ""
 echo "After cloud works, stop Mac agent:"

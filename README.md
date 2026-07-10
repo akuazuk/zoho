@@ -7,7 +7,7 @@
 | Код | Конфиг | Что делает | Где / когда |
 |-----|--------|------------|-------------|
 | **`mis-daily`** | `cloud/mis-daily-config.env` + секреты в `.env` | MariaDB → SQLite → Zoho `combined_report_temp` | Mac, **каждый день 06:30** |
-| **`prognosis-sheets`** | `cloud/prognosis-config.env` + секреты в `.env` / Secret Manager | Zoho `Прогноз_CF` → лист **Фин_Неделя** | GCP, **пн–пт 08:00–17:00** (каждый час) |
+| **`prognosis-sheets`** | `cloud/prognosis-config.env` | Zoho `Прогноз_CF` → лист **Фин_Неделя** | GCP, cron из конфига (сейчас **пн–пт 08:00–17:00 MSK**) |
 
 ### Куда пишет `prognosis-sheets` (см. `cloud/prognosis-config.env`)
 
@@ -16,7 +16,14 @@
 | **A140** | Сумма **текущей недели** |
 | **A1** | Сумма **следующей недели** |
 
-Правка ячеек — только в **`cloud/prognosis-config.env`**, затем `git push` в `main`.
+### Расписание (тоже в `cloud/prognosis-config.env`)
+
+```env
+PROGNOSIS_CRON_SCHEDULE=0 8-17 * * 1-5   # каждый час :00, часы 8–17, пн–пт
+PROGNOSIS_TIMEZONE=Europe/Moscow
+```
+
+Правка ячеек **или расписания** → commit → push в `main` → Cloud Build обновит job и scheduler.
 
 ## Компоненты
 

@@ -51,6 +51,7 @@ steps:
           --set-env-vars="GOOGLE_SHEETS_CREDENTIALS=$${GOOGLE_SHEETS_CREDENTIALS}" \
           --set-env-vars="PROGNOSIS_SCHEDULE=$${PROGNOSIS_SCHEDULE}" \
           --set-env-vars="ZOHO_PROGNOSIS_TABLE=$${ZOHO_PROGNOSIS_TABLE}"
+        bash cloud/update_prognosis_scheduler.sh
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_JOB_NAME}:$COMMIT_SHA
