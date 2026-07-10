@@ -120,8 +120,8 @@ def sheets_config() -> dict[str, str]:
 
 
 def render_sheet_formula(formula: str, sums: PrognosisSums) -> str:
-    """Substitute {{CURRENT_WEEK}} with the value already computed from Zoho."""
-    value = f"{round(sums.current_week, 2):.2f}"
+    """Substitute {{CURRENT_WEEK}} with Zoho value (comma decimal for RU Sheets)."""
+    value = f"{round(sums.current_week, 2):.2f}".replace(".", ",")
     return formula.replace("{{CURRENT_WEEK}}", value)
 
 
@@ -133,7 +133,9 @@ def load_sheet_formula(path: str, sums: PrognosisSums | None = None) -> str | No
         formula_path = _PROJECT_DIR / formula_path
     if not formula_path.exists():
         return None
-    formula = formula_path.read_text(encoding="utf-8").strip()
+    formula = formula_path.read_text(encoding="utf-8")
+    # Allow multi-line formula files; Sheets needs one line.
+    formula = "".join(line.strip() for line in formula.splitlines() if line.strip())
     if not formula:
         return None
     if not formula.startswith("="):
@@ -206,8 +208,8 @@ def write_to_google_sheets(sums: PrognosisSums, *, dry_run: bool = False) -> Non
         formula = load_sheet_formula(cfg["formula_combined_file"], sums)
         if formula:
             ws.update(
-                cfg["cell_combined"],
-                [[formula]],
+                values=[[formula]],
+                range_name=cfg["cell_combined"],
                 value_input_option="USER_ENTERED",
             )
             print(f"  formula -> {cfg['cell_combined']}")
