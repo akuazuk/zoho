@@ -19,7 +19,7 @@
 ### Расписание (тоже в `cloud/prognosis-config.env`)
 
 ```env
-PROGNOSIS_CRON_SCHEDULE=0 8-17 * * 1-5   # каждый час :00, часы 8–17, пн–пт
+PROGNOSIS_CRON_SCHEDULE=0 8-17 * * 1-5   # в файле: PROGNOSIS_CRON_SCHEDULE="0 8-17 * * 1-5"
 PROGNOSIS_TIMEZONE=Europe/Moscow
 ```
 
