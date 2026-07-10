@@ -31,7 +31,13 @@ from dotenv import load_dotenv
 
 from zoho_analytics import run_async_sql_export
 
+_PROJECT_DIR = Path(__file__).resolve().parent
+_PROGNOSIS_CONFIG = _PROJECT_DIR / "cloud" / "prognosis-config.env"
+
 load_dotenv()
+# Non-secret targets (cells, sheet, Zoho table): single file for Mac + GCP
+if _PROGNOSIS_CONFIG.exists():
+    load_dotenv(_PROGNOSIS_CONFIG, override=True)
 
 ZOHO_PROGNOSIS_TABLE = os.getenv("ZOHO_PROGNOSIS_TABLE", "Прогноз_CF")
 
@@ -116,7 +122,9 @@ def _open_worksheet(gc, cfg: dict[str, str]):
 def write_to_google_sheets(sums: PrognosisSums, *, dry_run: bool = False) -> None:
     cfg = sheets_config()
     if not cfg["spreadsheet_id"]:
-        raise ValueError("GOOGLE_SHEETS_ID is not set in .env")
+        raise ValueError(
+            "GOOGLE_SHEETS_ID is not set — edit cloud/prognosis-config.env"
+        )
 
     if dry_run:
         print("Dry-run: would write to Google Sheets:")

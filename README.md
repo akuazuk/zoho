@@ -2,12 +2,28 @@
 
 Автоматизация синхронизации данных клиники: MariaDB → SQLite → Zoho Analytics, прогноз CF → Google Sheets, ручной экспорт в BigQuery.
 
+## Два блока проекта
+
+| Код | Конфиг | Что делает | Где / когда |
+|-----|--------|------------|-------------|
+| **`mis-daily`** | `cloud/mis-daily-config.env` + секреты в `.env` | MariaDB → SQLite → Zoho `combined_report_temp` | Mac, **каждый день 06:30** |
+| **`prognosis-sheets`** | `cloud/prognosis-config.env` + секреты в `.env` / Secret Manager | Zoho `Прогноз_CF` → лист **Фин_Неделя** | GCP, **пн–пт 08:00–17:00** (каждый час) |
+
+### Куда пишет `prognosis-sheets` (см. `cloud/prognosis-config.env`)
+
+| Ячейка | Содержимое |
+|--------|------------|
+| **A140** | Сумма **текущей недели** |
+| **A1** | Сумма **следующей недели** |
+
+Правка ячеек — только в **`cloud/prognosis-config.env`**, затем `git push` в `main`.
+
 ## Компоненты
 
 | Задача | Скрипт | Где запускать |
 |--------|--------|---------------|
-| Ежедневно 06:30 — MariaDB → SQLite → Zoho | `scripts/run_daily_sync.sh` | **Mac** (LaunchAgent) |
-| Почасово — Прогноз_CF → Google Sheets A140/A141 | `scripts/run_prognosis_sheets.sh` | **Google Cloud** (рекомендуется) или Mac |
+| **mis-daily** — MariaDB → SQLite → Zoho | `scripts/run_daily_sync.sh` | **Mac** (LaunchAgent) |
+| **prognosis-sheets** — Прогноз_CF → Фин_Неделя | `zoho_prognosis_sheets.py` | **GCP** Cloud Run Job |
 | BigQuery sync (вручную) | `bq_sync.py` | Mac / любая машина с ключом carbide |
 
 MariaDB (`178.163.240.131`) и локальная SQLite-база — причина оставить **ежедневный sync на Mac**.  
@@ -50,30 +66,12 @@ launchctl list | grep prognosis
 tail -f logs/prognosis_sheets_*.log
 ```
 
-## Прогноз: настройки и запуск через Git
+## Прогноз: настройки через Git
 
-### Поменять ячейки (без Mac и без gcloud)
+**Один файл:** `cloud/prognosis-config.env` — ячейки, таблица, Zoho-таблица.  
+**Секреты:** `.env` (Mac) / GCP Secret Manager (облако).
 
-Отредактируйте в GitHub файл **`cloud/prognosis-config.env`**:
-
-```env
-GOOGLE_SHEETS_CELL_CURRENT=A150
-GOOGLE_SHEETS_CELL_NEXT=A151
-```
-
-Сохраните → **commit в `main`** → Cloud Build автоматически обновит job (триггер `prognosis-sheets-push`).
-
-Секреты (Zoho, ключ Sheets) в git не кладутся — они в GCP Secret Manager.
-
-### Запустить вручную через GitHub (опционально)
-
-В репозитории: **Actions** → **Run prognosis sheets** → **Run workflow**.
-
-Нужно один раз добавить secrets в GitHub (Settings → Secrets):
-- `GCP_PROJECT_ID` = `carbide-datum-383616`
-- `GCP_SA_KEY` = JSON ключа service account с правом запускать Cloud Run Jobs
-
-Без этих secrets — ручной запуск через [Cloud Run → Execute](https://console.cloud.google.com/run/jobs?project=carbide-datum-383616).
+После правки → commit в `main` → Cloud Build обновит job.
 
 ## Прогноз: Google Cloud (рекомендуется)
 

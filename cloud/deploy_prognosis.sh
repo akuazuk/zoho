@@ -19,10 +19,15 @@ if [[ ! -f .env ]]; then
   echo "Missing .env in $PROJECT_DIR" >&2
   exit 1
 fi
+if [[ ! -f cloud/prognosis-config.env ]]; then
+  echo "Missing cloud/prognosis-config.env" >&2
+  exit 1
+fi
 
 set -a
 # shellcheck disable=SC1091
 source .env
+source cloud/prognosis-config.env
 set +a
 
 PROJECT_ID="${GCP_PROJECT_ID:-carbide-datum-383616}"
@@ -92,10 +97,11 @@ for name in ZOHO_CLIENT_ID ZOHO_CLIENT_SECRET ZOHO_REFRESH_TOKEN; do
   printf '%s' "$val" | gcloud secrets versions add "$secret" --data-file=- --quiet
 done
 
-for name in ZOHO_ORG_ID ZOHO_WORKSPACE_ID GOOGLE_SHEETS_ID GOOGLE_SHEETS_GID; do
+for name in ZOHO_ORG_ID ZOHO_WORKSPACE_ID GOOGLE_SHEETS_ID GOOGLE_SHEETS_GID \
+  GOOGLE_SHEETS_CELL_CURRENT GOOGLE_SHEETS_CELL_NEXT; do
   val="${!name:-}"
   if [[ -z "$val" ]]; then
-    echo "Missing $name in .env" >&2
+    echo "Missing $name in cloud/prognosis-config.env" >&2
     exit 1
   fi
 done
