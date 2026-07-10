@@ -53,7 +53,10 @@ DEFAULT_BQ_CREDENTIALS = (
 DEFAULT_SHEETS_CREDENTIALS = str(
     Path(__file__).resolve().parent / "sonorous-saga-321204-35715098b819.json"
 )
-LOG_DIR = Path(__file__).resolve().parent / "logs"
+DEFAULT_FORMULA_A142 = str(
+    _PROJECT_DIR / "cloud" / "formulas" / "a142_combined.formula"
+)
+LOG_DIR = _PROJECT_DIR / "logs"
 STATUS_FILE = LOG_DIR / "prognosis_sheets_status.json"
 
 
@@ -107,9 +110,29 @@ def sheets_config() -> dict[str, str]:
         "worksheet_gid": os.getenv("GOOGLE_SHEETS_GID", "").strip(),
         "cell_current": os.getenv("GOOGLE_SHEETS_CELL_CURRENT", "A140").strip(),
         "cell_next": os.getenv("GOOGLE_SHEETS_CELL_NEXT", "A141").strip(),
+        "cell_combined": os.getenv("GOOGLE_SHEETS_CELL_COMBINED", "").strip(),
+        "formula_combined_file": os.getenv(
+            "GOOGLE_SHEETS_FORMULA_COMBINED_FILE", DEFAULT_FORMULA_A142
+        ).strip(),
         "cell_updated_at": os.getenv("GOOGLE_SHEETS_CELL_UPDATED_AT", "").strip(),
         "credentials": os.getenv("GOOGLE_SHEETS_CREDENTIALS", DEFAULT_SHEETS_CREDENTIALS).strip(),
     }
+
+
+def load_sheet_formula(path: str) -> str | None:
+    if not path:
+        return None
+    formula_path = Path(path)
+    if not formula_path.is_absolute():
+        formula_path = _PROJECT_DIR / formula_path
+    if not formula_path.exists():
+        return None
+    formula = formula_path.read_text(encoding="utf-8").strip()
+    if not formula:
+        return None
+    if not formula.startswith("="):
+        formula = "=" + formula
+    return formula
 
 
 def _open_worksheet(gc, cfg: dict[str, str]):
@@ -131,6 +154,9 @@ def write_to_google_sheets(sums: PrognosisSums, *, dry_run: bool = False) -> Non
         print(f"  {cfg['cell_updated_at']}: {sums.as_of}")
         print(f"  {cfg['cell_current']}: {sums.current_week:.2f}")
         print(f"  {cfg['cell_next']}: {sums.next_week:.2f}")
+        if cfg["cell_combined"]:
+            formula = load_sheet_formula(cfg["formula_combined_file"])
+            print(f"  {cfg['cell_combined']}: formula ({len(formula or '')} chars)")
         return
 
     import gspread
@@ -168,6 +194,15 @@ def write_to_google_sheets(sums: PrognosisSums, *, dry_run: bool = False) -> Non
         ws.update_acell(cfg["cell_updated_at"], sums.as_of)
     ws.update_acell(cfg["cell_current"], round(sums.current_week, 2))
     ws.update_acell(cfg["cell_next"], round(sums.next_week, 2))
+    if cfg["cell_combined"]:
+        formula = load_sheet_formula(cfg["formula_combined_file"])
+        if formula:
+            ws.update(
+                cfg["cell_combined"],
+                [[formula]],
+                value_input_option="USER_ENTERED",
+            )
+            print(f"  formula -> {cfg['cell_combined']}")
     print(f"  sheet: {ws.title} (gid={ws.id})")
 
 
@@ -181,6 +216,7 @@ def save_status(sums: PrognosisSums, *, success: bool, error: str | None = None)
         "cells": {
             "current": sheets_config()["cell_current"],
             "next": sheets_config()["cell_next"],
+            "combined": sheets_config()["cell_combined"],
             "updated_at": sheets_config()["cell_updated_at"],
         },
     }

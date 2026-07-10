@@ -129,6 +129,8 @@ gcloud run jobs deploy "$JOB_NAME" \
   --set-env-vars="GOOGLE_SHEETS_GID=${GOOGLE_SHEETS_GID}" \
   --set-env-vars="GOOGLE_SHEETS_CELL_CURRENT=${GOOGLE_SHEETS_CELL_CURRENT:-A140}" \
   --set-env-vars="GOOGLE_SHEETS_CELL_NEXT=${GOOGLE_SHEETS_CELL_NEXT:-A141}" \
+  --set-env-vars="GOOGLE_SHEETS_CELL_COMBINED=${GOOGLE_SHEETS_CELL_COMBINED:-}" \
+  --set-env-vars="GOOGLE_SHEETS_FORMULA_COMBINED_FILE=${GOOGLE_SHEETS_FORMULA_COMBINED_FILE:-cloud/formulas/a142_combined.formula}" \
   --set-env-vars="GOOGLE_SHEETS_CREDENTIALS=/secrets/sheets-sa.json" \
   --set-env-vars="PROGNOSIS_SCHEDULE=always"
 
