@@ -50,7 +50,7 @@ steps:
           --set-env-vars="GOOGLE_SHEETS_CELL_NEXT=$${GOOGLE_SHEETS_CELL_NEXT}" \
           --set-env-vars="GOOGLE_SHEETS_CELL_COMBINED=$${GOOGLE_SHEETS_CELL_COMBINED}" \
           --set-env-vars="GOOGLE_SHEETS_FORMULA_COMBINED_FILE=$${GOOGLE_SHEETS_FORMULA_COMBINED_FILE}" \
-          --set-env-vars="GOOGLE_SHEETS_CREDENTIALS=$${GOOGLE_SHEETS_CREDENTIALS}" \
+          --set-env-vars="GOOGLE_SHEETS_CREDENTIALS=/secrets/sheets-sa.json" \
           --set-env-vars="PROGNOSIS_SCHEDULE=$${PROGNOSIS_SCHEDULE}" \
           --set-env-vars="ZOHO_PROGNOSIS_TABLE=$${ZOHO_PROGNOSIS_TABLE}"
         bash cloud/update_prognosis_scheduler.sh
