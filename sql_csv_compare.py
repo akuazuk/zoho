@@ -23,8 +23,10 @@ log = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
-DEFAULT_DB_RETRIES = int(os.environ.get("MIS_DB_RETRIES", "3"))
-DEFAULT_DB_RETRY_DELAY_SEC = float(os.environ.get("MIS_DB_RETRY_DELAY_SEC", "5"))
+# Morning clinic systems often exhaust MariaDB max_connections (~06:30).
+# Longer backoff gives the server time to free slots ("Too many connections").
+DEFAULT_DB_RETRIES = int(os.environ.get("MIS_DB_RETRIES", "6"))
+DEFAULT_DB_RETRY_DELAY_SEC = float(os.environ.get("MIS_DB_RETRY_DELAY_SEC", "20"))
 
 host = "178.163.240.131"
 port = 6330

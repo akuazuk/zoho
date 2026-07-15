@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.kravira.mis-daily-retry</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/pavel/CURSOR/sql_epam/scripts/run_daily_sync_retry.sh</string>
+    </array>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>9</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+    <key>StandardOutPath</key>
+    <string>/Users/pavel/CURSOR/sql_epam/logs/daily-retry.launchd.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/pavel/CURSOR/sql_epam/logs/daily-retry.launchd.err.log</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin</string>
+    </dict>
+</dict>
+</plist>

@@ -102,14 +102,30 @@ if [[ ! -x "$PYTHON" ]]; then
   exit 1
 fi
 
-result=$(run_step "MariaDB -> SQLite" "$PYTHON" sync_mis_data.py run)
-STEP_MARIADB_CODE="${result%%:*}"
-STEP_MARIADB_SEC="${result##*:}"
-if [[ "$STEP_MARIADB_CODE" -eq 0 ]]; then
-  STEP_MARIADB_OK=true
-else
+# Outer rounds help when MariaDB hits max_connections at 06:30 (clinic peak).
+MARIADB_ROUNDS="${MIS_SYNC_ROUNDS:-3}"
+MARIADB_ROUND_SLEEP="${MIS_SYNC_ROUND_SLEEP_SEC:-180}"
+export MIS_DB_RETRIES="${MIS_DB_RETRIES:-6}"
+export MIS_DB_RETRY_DELAY_SEC="${MIS_DB_RETRY_DELAY_SEC:-20}"
+
+STEP_MARIADB_CODE=1
+STEP_MARIADB_SEC=0
+for round in $(seq 1 "$MARIADB_ROUNDS"); do
+  result=$(run_step "MariaDB -> SQLite (round ${round}/${MARIADB_ROUNDS})" "$PYTHON" sync_mis_data.py run)
+  STEP_MARIADB_CODE="${result%%:*}"
+  STEP_MARIADB_SEC="${result##*:}"
+  if [[ "$STEP_MARIADB_CODE" -eq 0 ]]; then
+    STEP_MARIADB_OK=true
+    break
+  fi
+  if [[ "$round" -lt "$MARIADB_ROUNDS" ]]; then
+    log "MariaDB failed (exit=${STEP_MARIADB_CODE}); sleep ${MARIADB_ROUND_SLEEP}s then retry"
+    sleep "$MARIADB_ROUND_SLEEP"
+  fi
+done
+if [[ "$STEP_MARIADB_OK" != true ]]; then
   FAILED_STEP="mariadb_sqlite"
-  log "Aborting: MariaDB sync failed"
+  log "Aborting: MariaDB sync failed after ${MARIADB_ROUNDS} round(s)"
   exit "$STEP_MARIADB_CODE"
 fi
 
